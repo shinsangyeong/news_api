@@ -4,7 +4,7 @@ let news = []
 
 const getLatestNews = async ()=>{
  const url= new URL(
-    `https://noona-times-be-5ca9402f90d9.herokuapp.com/top-headlines?country=kr/top-headlines?country=us&apiKey=${API_KEY}`
+   `https://noona-times-be-5ca9402f90d9.herokuapp.com/top-headlines?country=kr&apiKey=${API_KEY}`
  );
 
     const response = await fetch(url);
@@ -15,3 +15,6 @@ const getLatestNews = async ()=>{
     console.log("ddddd",news);
 };
 getLatestNews();
+
+
+
