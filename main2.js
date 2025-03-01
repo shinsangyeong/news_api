@@ -1,8 +1,8 @@
-const API_KEY = `dddb00f0bd2649b69fddc3d39c9b1937`;
+const API_KEY = `35a6696bf7ac4d9e90db114d5635948e`;
 let newsList = [];
 const menus = document.querySelectorAll(".menus button");
-menus.forEach(menu => menu.addEventListener("click", (event) => getNewsByCategory(event)));
 const sideNav = document.querySelectorAll(".side-nav button");
+menus.forEach(menu => menu.addEventListener("click", (event) => getNewsByCategory(event)));
 sideNav.forEach(menu => menu.addEventListener("click", (event) => getNewsByCategory(event)));
 let url = new URL(`https://noona-times-be-5ca9402f90d9.herokuapp.com/top-headlines?country=us&apiKey=${API_KEY}`);
 let totalResults = 0;
@@ -11,28 +11,24 @@ const pageSize = 10;
 const groupSize = 5;
 
 const getNews = async () => {
-  try{
-    url.searchParams.set("page", page);  // &page=page
-    url.searchParams.set("pageSize", pageSize);
+  try {
     const response = await fetch(url);
     const data = await response.json();
-
-    if(response.status === 200){
-      if(data.articles.length === 0){
+    if (response.status === 200) {
+      if (data.articles.length === 0) {
         throw new Error("No result for this search");
       }
       newsList = data.articles;
-      totalResults =data.totalResults;
-      console.log("date", data);
+      totalResults = data.totalResults;
       render();
       paginationRender();
-    }else{
+    } else {
       throw new Error(data.message);
     }
-  }catch(error){
+  } catch (error) {
     errorRender(error.message);
   }
-}
+};
 
 // 최신 뉴스 가져오기
 const getLatestNews = async () => {
@@ -45,7 +41,8 @@ const getNewsByCategory = async (event) => {
   const category = event.target.textContent.toLowerCase();
   url = new URL(`https://noona-times-be-5ca9402f90d9.herokuapp.com/top-headlines?country=us&category=${category}&apiKey=${API_KEY}`);
   await getNews();
-}
+};
+
 // 키워드 검색 뉴스 가져오기
 const getNewsByKeyword = async () => {
   const keyword = document.getElementById("search-input").value;
@@ -53,12 +50,37 @@ const getNewsByKeyword = async () => {
   await getNews();
 };
 
+// 페이지네이션
+const paginationRender = () => {
+  const pageGroup = Math.ceil(page / groupSize);
+  const lastPage = Math.min(pageGroup * groupSize, Math.ceil(totalResults / pageSize));
+  const firstPage = lastPage - (groupSize - 1);
+
+  let paginationHTML = `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${page - 1})">Previous</a></li>`;
+
+  for (let i = firstPage; i <= lastPage; i++) {
+    paginationHTML += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+  }
+
+  paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${page + 1})">Next</a></li>`;
+
+  document.querySelector(".pagination").innerHTML = paginationHTML;
+};
+
+const changePage = (newPage) => {
+  if (newPage < 1 || newPage > Math.ceil(totalResults / pageSize)) return;
+  page = newPage;
+  getNews();
+};
+
+getLatestNews();
+
 // 뉴스 데이터 렌더링
 const render = () => {
   const newsHTML = newsList.map((news) => {
     const newsTitle = news.title ? news.title : "제목 없음"; // 제목 없을 경우 기본값 설정
     const newsSource = news.source && news.source.name ? news.source.name : "No Source"; // 출처가 없을 경우 기본값
-    const urlImg = news.urlToImage ? news.urlToImage : "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/300px-No_image_available.svg.png"; // 이미지 없을 경우 기본 이미지
+    const urlImg = news.urlToImage ? news.urlToImage : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqEWgS0uxxEYJ0PsOb2OgwyWvC0Gjp8NUdPw&usqp=CAU"; // 이미지 없을 경우 기본 이미지
     const momentTime = news.publishedAt ? moment(news.publishedAt).fromNow() : "날짜 없음"; // moment.js를 이용한 날짜 변환
     const newsDescription = textLimit(news.description, 200); // 내용 길이 제한
 
@@ -73,7 +95,7 @@ const render = () => {
               </div>
             </div>`;
   }).join('');
-  
+
   document.getElementById("news-board").innerHTML = newsHTML;
 };
 
@@ -84,7 +106,7 @@ const errorRender = (errorMessage) => {
   </div>`;
 
   document.getElementById("news-board").innerHTML = errorHTML;
-}
+};
 
 // 텍스트 길이 제한 함수
 const textLimit = (text, limit) => {
@@ -112,59 +134,3 @@ const closeNav = () => {
 const openSearchBox = () => {
   document.querySelector(".search-wrap").classList.toggle("active");
 };
-
-// pagination
-const paginationRender = () => {
-  // totalResult
-  // page
-  // pageSize
-  // totalPages
-  const totalPages = Math.ceil(totalResults / pageSize);
-  // groupSize
-
-  // pageGroup
-  const pageGroup = Math.ceil(page / groupSize);
-  // lastPage
-  let lastPage = pageGroup * groupSize;
-  // 마지막 페이지 그룹이 그룹 사이즈보다 작다? lastPage = totalPages
-  if(lastPage > totalPages){
-    lastPage = totalPages;
-  }
-
-  // firstPage
-  const firstPage = lastPage - (groupSize - 1) <= 0 ? 1: lastPage - (groupSize - 1);
-
-  let paginationHTML = `<li class="page-item" onclick="moveToPage(${page - 1})">
-                                      <a class="page-link" href="#" aria-label="Previous">
-                                        <span aria-hidden="true">&#60;</span>
-                                      </a>
-                                    </li>`;
-
-  for(let i = firstPage; i <= lastPage; i++){
-    paginationHTML += `<li class="page-item ${i === page ? "active" : ""}" onclick="moveToPage(${i})"><a class="page-link">${i}</a></li>`;
-  }
-
-  paginationHTML += `<li class="page-item" onclick="moveToPage(${page + 1})">
-                                    <a class="page-link" href="#" aria-label="Next">
-                                      <span aria-hidden="true">&#62;</span>
-                                    </a>
-                                  </li>`;
-
-  document.querySelector(".pagination").innerHTML = paginationHTML;
-
-};
-
-const moveToPage = (pageNum) => {
-  console.log("moveToPage", pageNum);
-  page = pageNum;
-  getNews();
-};
-
-getLatestNews();
-
-
-// 과제
-// 1. 1페이지에 있으면 prev버튼을 숨김 -> 부트스트랩에 있음
-// 2. lastPage에 있으면 next버튼을 숨김 -> 부트스트랩에 있음
-// 3. 화살표 2개 짜리 >> 누르면 가장 끝에 페이지에 한 번에 넘어가게 하기
-// 4. 화살표 2개 짜리 << 누르면 가장 첫 페이지에 한 번에 넘어가게 하기 
